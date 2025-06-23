@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisitTime - Система онлайн-записи</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .booking-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .booking-form {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+
+        .booking-form h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .time-slot {
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .time-slot:hover {
+            border-color: #4facfe;
+            background: #f0f8ff;
+        }
+
+        .time-slot.selected {
+            background: #4facfe;
+            color: white;
+            border-color: #4facfe;
+        }
+
+        .time-slot.booked {
+            background: #e74c3c;
+            color: white;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .calendar-view {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid #e9ecef;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-nav {
+            background: #4facfe;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .calendar-day:hover {
+            background: #f0f8ff;
+        }
+
+        .calendar-day.selected {
+            background: #4facfe;
+            color: white;
+        }
+
+        .calendar-day.has-bookings {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+
+        .bookings-list {
+            margin-top: 30px;
+        }
+
+        .booking-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .booking-item h4 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .booking-item p {
+            color: #6c757d;
+            margin-bottom: 3px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status.confirmed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .telegram-integration {
+            background: linear-gradient(135deg, #0088cc 0%, #00a0e4 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .telegram-integration h3 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .telegram-bot-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .booking-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>VisitTime</h1>
+            <p>Профессиональная система онлайн-записи с интеграцией Telegram</p>
+        </div>
+
+        <div class="main-content">
+            <div class="booking-grid">
+                <div class="booking-form">
+                    <h2>Записаться на прием</h2>
+                    <form id="bookingForm">
+                        <div class="form-group">
+                            <label for="clientName">ФИО</label>
+                            <input type="text" id="clientName" name="clientName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="clientPhone">Номер телефона</label>
+                            <input type="tel" id="clientPhone" name="clientPhone" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="clientEmail">Email</label>
+                            <input type="email" id="clientEmail" name="clientEmail" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="serviceType">Тип услуги</label>
+                            <select id="serviceType" name="serviceType" required>
+                                <option value="">Выберите услугу</option>
+                                <option value="consultation">Консультация</option>
+                                <option value="meeting">Деловая встреча</option>
+                                <option value="appointment">Общий прием</option>
+                                <option value="interview">Собеседование</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="appointmentDate">Выберите дату</label>
+                            <input type="date" id="appointmentDate" name="appointmentDate" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Доступные временные слоты</label>
+                            <div class="time-slots" id="timeSlots">
+                                <div class="time-slot" data-time="09:00">09:00</div>
+                                <div class="time-slot" data-time="10:00">10:00</div>
+                                <div class="time-slot" data-time="11:00">11:00</div>
+                                <div class="time-slot" data-time="12:00">12:00</div>
+                                <div class="time-slot" data-time="14:00">14:00</div>
+                                <div class="time-slot" data-time="15:00">15:00</div>
+                                <div class="time-slot" data-time="16:00">16:00</div>
+                                <div class="time-slot" data-time="17:00">17:00</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="notes">Дополнительные заметки</label>
+                            <textarea id="notes" name="notes" rows="3" placeholder="Особые пожелания или комментарии..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn">Записаться</button>
+                    </form>
+                </div>
+
+                <div class="calendar-view">
+                    <div class="calendar-header">
+                        <button class="calendar-nav" onclick="changeMonth(-1)">◀</button>
+                        <h3 id="currentMonth">Декабрь 2024</h3>
+                        <button class="calendar-nav" onclick="changeMonth(1)">▶</button>
+                    </div>
+                    
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Календарь будет сгенерирован JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="bookings-list">
+                <h2>Последние записи</h2>
+                <div id="bookingsList">
+                    <div class="booking-item">
+                        <h4>Иван Петров - Консультация</h4>
+                        <p><strong>Дата:</strong> 15 декабря 2024 в 10:00</p>
+                        <p><strong>Телефон:</strong> +7 (123) 456-7890</p>
+                        <p><strong>Email:</strong> ivan.petrov@email.com</p>
+                        <span class="status confirmed">Подтверждено</span>
+                    </div>
+                    
+                    <div class="booking-item">
+                        <h4>Мария Иванова - Деловая встреча</h4>
+                        <p><strong>Дата:</strong> 16 декабря 2024 в 14:00</p>
+                        <p><strong>Телефон:</strong> +7 (987) 654-3210</p>
+                        <p><strong>Email:</strong> maria.i@company.com</p>
+                        <span class="status pending">Ожидает</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="telegram-integration">
+                <h3>🤖 Интеграция с Telegram</h3>
+                <p>Управляйте записями через нашего Telegram-бота!</p>
+                <div class="telegram-bot-info">
+                    <p><strong>Имя бота:</strong> @VisitTimeBot</p>
+                    <p><strong>Функции:</strong> Запись на прием, проверка расписания, уведомления</p>
+                    <button class="btn" onclick="openTelegramBot()" style="margin-top: 15px; background: rgba(255,255,255,0.2);">
+                        Открыть Telegram-бота
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Состояние системы записи
+        let selectedDate = null;
+        let selectedTime = null;
+        let currentMonth = new Date();
+        let bookings = [];
+
+        // Инициализация системы
+        document.addEventListener('DOMContentLoaded', function() {
+            generateCalendar();
+            setupEventListeners();
+            loadBookings();
+        });
+
+        function setupEventListeners() {
+            // Выбор временного слота
+            document.querySelectorAll('.time-slot').forEach(slot => {
+                slot.addEventListener('click', function() {
+                    if (this.classList.contains('booked')) return;
+                    
+                    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedTime = this.dataset.time;
+                });
+            });
+
+            // Выбор даты
+            document.getElementById('appointmentDate').addEventListener('change', function() {
+                selectedDate = this.value;
+                updateTimeSlots();
+            });
+
+            // Отправка формы
+            document.getElementById('bookingForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleBookingSubmission();
+            });
+        }
+
+        function generateCalendar() {
+            const calendar = document.getElementById('calendarGrid');
+            const monthYear = document.getElementById('currentMonth');
+            
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            
+            monthYear.textContent = new Date(year, month).toLocaleString('ru', { month: 'long', year: 'numeric' });
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            calendar.innerHTML = '';
+            
+            // Заголовки дней
+            const dayHeaders = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+            dayHeaders.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.textContent = day;
+                dayHeader.style.fontWeight = 'bold';
+                dayHeader.style.background = '#f8f9fa';
+                dayHeader.classList.add('calendar-day');
+                calendar.appendChild(dayHeader);
+            });
+            
+            // Пустые ячейки для дней перед началом месяца
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.classList.add('calendar-day');
+                calendar.appendChild(emptyDay);
+            }
+            
+            // Дни месяца
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.textContent = day;
+                dayElement.classList.add('calendar-day');
+                
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                // Проверка, есть ли записи на этот день
+                if (hasBookingsOnDate(dateStr)) {
+                    dayElement.classList.add('has-bookings');
+                }
+                
+                dayElement.addEventListener('click', function() {
+                    document.getElementById('appointmentDate').value = dateStr;
+                    selectedDate = dateStr;
+                    updateTimeSlots();
+                    
+                    document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+                
+                calendar.appendChild(dayElement);
+            }
+        }
+
+        function changeMonth(direction) {
+            currentMonth.setMonth(currentMonth.getMonth() + direction);
+            generateCalendar();
+        }
+
+        function hasBookingsOnDate(date) {
+            return bookings.some(booking => booking.date === date);
+        }
+
+        function updateTimeSlots() {
+            const slots = document.querySelectorAll('.time-slot');
+            slots.forEach(slot => {
+                slot.classList.remove('booked', 'selected');
+                
+                // Имитация занятых слотов
+                if (selectedDate && Math.random() > 0.7) {
+                    slot.classList.add('booked');
+                }
+            });
+        }
+
+        function handleBookingSubmission() {
+            if (!selectedDate || !selectedTime) {
+                alert('Пожалуйста, выберите дату и время для записи.');
+                return;
+            }
+
+            const formData = new FormData(document.getElementById('bookingForm'));
+            const booking = {
+                id: Date.now(),
+                name: formData.get('clientName'),
+                phone: formData.get('clientPhone'),
+                email: formData.get('clientEmail'),
+                service: formData.get('serviceType'),
+                date: selectedDate,
+                time: selectedTime,
+                notes: formData.get('notes'),
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
+
+            bookings.push(booking);
+            saveBookings();
+            displayBookings();
+            
+            // Имитация уведомления в Telegram
+            sendTelegramNotification(booking);
+            
+            alert('Запись успешно отправлена! Вы получите подтверждение в ближайшее время.');
+            document.getElementById('bookingForm').reset();
+            selectedDate = null;
+            selectedTime = null;
+            
+            // Обновление интерфейса
+            generateCalendar();
+            document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+        }
+
+        function loadBookings() {
+            const stored = localStorage.getItem('visitTimeBookings');
+            if (stored) {
+                bookings = JSON.parse(stored);
+                displayBookings();
+            }
+        }
+
+        function saveBookings() {
+            localStorage.setItem('visitTimeBookings', JSON.stringify(bookings));
+        }
+
+        function displayBookings() {
+            const bookingsList = document.getElementById('bookingsList');
+            bookingsList.innerHTML = '';
+            
+            bookings.slice(-5).reverse().forEach(booking => {
+                const bookingElement = document.createElement('div');
+                bookingElement.className = 'booking-item';
+                bookingElement.innerHTML = `
+                    <h4>${booking.name} - ${booking.service}</h4>
+                    <p><strong>Дата:</strong> ${new Date(booking.date).toLocaleDateString('ru')} в ${booking.time}</p>
+                    <p><strong>Телефон:</strong> ${booking.phone}</p>
+                    <p><strong>Email:</strong> ${booking.email}</p>
+                    <span class="status ${booking.status}">${booking.status === 'pending' ? 'Ожидает' : 'Подтверждено'}</span>
+                `;
+                bookingsList.appendChild(bookingElement);
+            });
+        }
+
+        function sendTelegramNotification(booking) {
+            // Имитация уведомления в Telegram
+            console.log('📱 Уведомление в Telegram отправлено:', {
+                message: `Новая запись: ${booking.name} на ${booking.service} ${booking.date} в ${booking.time}`,
+                chatId: 'admin_chat_id'
+            });
+        }
+
+        function openTelegramBot() {
+            // Открытие Telegram-бота
+            window.open('https://t.me/VisitTimeBot', '_blank');
+        }
+    </script>
+</body>
+</html>
